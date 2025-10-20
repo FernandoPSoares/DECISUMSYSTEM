@@ -1,6 +1,6 @@
 # backend/app/modules/inventory/products/products_router.py
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -20,17 +20,19 @@ def create_categoria_udm_endpoint(
     db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(require_permission("inventory:admin"))
 ):
-    return products_service.product_structure_service.create_categoria_udm(db=db, obj_in=obj_in)
+    return products_service.product_structure_service.create_categoria_udm(db=db, categoria_in=obj_in)
 
 @router_categorias_udm.get("/", response_model=List[products_schemas.CategoriaUdmDetail], summary="Listar Categorias de UDM com as suas UDMs")
 def read_categorias_udm_endpoint(
     db: Session = Depends(get_db),
     skip: int = 0, limit: int = 100, search: Optional[str] = None, 
     sort_by: Optional[str] = None, sort_order: str = "asc",
+    is_active: Optional[bool] = None,
     current_user: models.Usuario = Depends(require_permission("inventory:read"))
 ):
     return products_service.product_structure_service.get_all_categorias_udm(
-        db, skip=skip, limit=limit, search=search, sort_by=sort_by, sort_order=sort_order
+        db, skip=skip, limit=limit, search=search, sort_by=sort_by, sort_order=sort_order,
+        is_active=is_active
     )
 
 @router_categorias_udm.put("/{id}", response_model=products_schemas.CategoriaUdm, summary="Atualizar uma Categoria de UDM")
@@ -38,13 +40,34 @@ def update_categoria_udm_endpoint(
     id: str, obj_in: products_schemas.CategoriaUdmUpdate, db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(require_permission("inventory:admin"))
 ):
-    return products_service.product_structure_service.update_categoria_udm(db, id=id, obj_in=obj_in)
+    # Esta função precisa existir no serviço. Se não existir, deve ser adicionada.
+    # Assumindo que o serviço terá um método `update_categoria_udm`
+    db_obj = products_service.product_structure_service.update_categoria_udm(db, id=id, obj_in=obj_in)
+    return db_obj
+
+
+@router_categorias_udm.put("/{id}/change-reference", response_model=products_schemas.CategoriaUdmDetail, summary="Alterar a UDM de Referência de uma Categoria")
+def change_reference_udm_endpoint(
+    id: str,
+    request_body: products_schemas.ChangeReferenceUdmRequest,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(require_permission("inventory:admin"))
+):
+    """
+    Define uma nova UDM de referência para a categoria.
+    Isto irá recalcular todas as proporções das UDMs associadas.
+    """
+    return products_service.product_structure_service.change_reference_udm(
+        db, category_id=id, new_ref_udm_id=request_body.new_reference_udm_id
+    )
 
 @router_categorias_udm.put("/{id}/deactivate", response_model=products_schemas.CategoriaUdm, summary="Desativar uma Categoria de UDM")
 def deactivate_categoria_udm_endpoint(
     id: str, db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(require_permission("inventory:admin"))
 ):
+    # Esta função precisa existir no serviço.
+    # Assumindo um método `update_categoria_udm_status` no serviço
     return products_service.product_structure_service.update_categoria_udm_status(db, id=id, is_active=False)
 
 @router_categorias_udm.put("/{id}/activate", response_model=products_schemas.CategoriaUdm, summary="Reativar uma Categoria de UDM")
@@ -65,7 +88,7 @@ def create_udm_endpoint(
     obj_in: products_schemas.UdmCreate, db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(require_permission("inventory:admin"))
 ):
-    return products_service.product_structure_service.create_udm(db=db, obj_in=obj_in)
+    return products_service.product_structure_service.create_udm(db=db, udm_in=obj_in)
 
 @router_udm.get("/", response_model=List[products_schemas.Udm], summary="Listar Unidades de Medida")
 def read_udm_endpoint(
@@ -74,6 +97,7 @@ def read_udm_endpoint(
     is_active: Optional[bool] = None,
     current_user: models.Usuario = Depends(require_permission("inventory:read"))
 ):
+    # Assumindo um método `get_all_udm` no serviço
     return products_service.product_structure_service.get_all_udm(
         db, skip=skip, limit=limit, search=search, sort_by=sort_by, sort_order=sort_order, is_active=is_active
     )
@@ -83,6 +107,7 @@ def update_udm_endpoint(
     id: str, obj_in: products_schemas.UdmUpdate, db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(require_permission("inventory:admin"))
 ):
+    # Assumindo um método `update_udm` no serviço
     return products_service.product_structure_service.update_udm(db, id=id, obj_in=obj_in)
 
 @router_udm.put("/{id}/deactivate", response_model=products_schemas.Udm, summary="Desativar uma Unidade de Medida")
@@ -90,14 +115,14 @@ def deactivate_udm_endpoint(
     id: str, db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(require_permission("inventory:admin"))
 ):
-    return products_service.product_structure_service.update_udm_status(db, id=id, is_active=False)
+    return products_service.product_structure_service.update_udm_status(db, udm_id=id, is_active=False)
 
 @router_udm.put("/{id}/activate", response_model=products_schemas.Udm, summary="Reativar uma Unidade de Medida")
 def activate_udm_endpoint(
     id: str, db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(require_permission("inventory:admin"))
 ):
-    return products_service.product_structure_service.update_udm_status(db, id=id, is_active=True)
+    return products_service.product_structure_service.update_udm_status(db, udm_id=id, is_active=True)
 
 
 # --- Roteador para Categorias de Produto ---
@@ -111,6 +136,7 @@ def create_categoria_produto_endpoint(
     obj_in: products_schemas.CategoriaProdutoCreate, db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(require_permission("inventory:admin"))
 ):
+    # Assumindo um método `create_categoria_produto` no serviço
     return products_service.product_structure_service.create_categoria_produto(db=db, obj_in=obj_in)
 
 @router_categorias_produto.get("/", response_model=List[products_schemas.CategoriaProduto])
@@ -118,7 +144,6 @@ def read_categorias_produto_endpoint(
     db: Session = Depends(get_db), skip: int = 0, limit: int = 100,
     search: Optional[str] = None, sort_by: Optional[str] = None, sort_order: str = "asc",
     is_active: Optional[bool] = None,
-    # Parâmetro para o formulário não mostrar a própria categoria como pai
     exclude_id: Optional[str] = None,
     current_user: models.Usuario = Depends(require_permission("inventory:read"))
 ):
@@ -131,6 +156,7 @@ def update_categoria_produto_endpoint(
     id: str, obj_in: products_schemas.CategoriaProdutoUpdate, db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(require_permission("inventory:admin"))
 ):
+    # Assumindo um método `update_categoria_produto` no serviço
     return products_service.product_structure_service.update_categoria_produto(db, id=id, obj_in=obj_in)
 
 @router_categorias_produto.put("/{id}/deactivate", response_model=products_schemas.CategoriaProduto)
@@ -138,6 +164,7 @@ def deactivate_categoria_produto_endpoint(
     id: str, db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(require_permission("inventory:admin"))
 ):
+    # Assumindo um método `update_categoria_produto_status` no serviço
     return products_service.product_structure_service.update_categoria_produto_status(db, id=id, is_active=False)
 
 @router_categorias_produto.put("/{id}/activate", response_model=products_schemas.CategoriaProduto)
