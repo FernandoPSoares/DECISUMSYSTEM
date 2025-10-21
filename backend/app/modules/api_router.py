@@ -10,6 +10,7 @@ from .purchasing.suppliers.suppliers_router import router as suppliers_router
 from .production.work_centers.work_centers_router import router as work_centers_router
 from .inventory.locations.locations_router import router_locais, router_tipos_local
 from .inventory.products.products_router import router_categorias_udm, router_udm, router_categorias_produto
+from .inventory.brands.brands_router import router as brands_router 
 
 # Cria o nosso router de agregação principal
 api_router = APIRouter()
@@ -26,4 +27,4 @@ api_router.include_router(router_locais)
 api_router.include_router(router_categorias_udm)
 api_router.include_router(router_udm)
 api_router.include_router(router_categorias_produto)
-
+api_router.include_router(brands_router) 

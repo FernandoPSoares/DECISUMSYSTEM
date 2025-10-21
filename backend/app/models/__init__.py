@@ -24,6 +24,7 @@ from .inventory.transfer_type_model import TipoTransferencia
 from .inventory.transfer_model import Transferencia
 from .inventory.stock_movement_model import MovimentacaoLivroRazao
 from .inventory.stock_count_model import ContagemInventario, ContagemInventarioLinha
+from .inventory.brand_model import Marca
 
 # Módulo de Produção
 from .production.operation_type_model import TipoOperacao
