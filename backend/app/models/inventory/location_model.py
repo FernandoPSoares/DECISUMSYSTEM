@@ -1,9 +1,10 @@
-# backend/app/models/inventory/location_model.py
+# File: backend/app/models/inventory/location_model.py
 
 from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime, func
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped  # <-- ALTERAÇÃO: Adicionado Mapped
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
+from typing import List  # <-- ALTERAÇÃO: Adicionado List
 
 # Importa a Base partilhada a partir do nosso core
 from ...core.database import Base
@@ -37,3 +38,11 @@ class Local(Base):
     tipo_local = relationship("TipoLocal")
     local_pai = relationship("Local", remote_side=[id])
 
+    # --- INÍCIO DA ALTERAÇÃO (CMMS) ---
+    
+    # Relação One-to-Many com Ativos (Assets)
+    # Permite que um Local saiba quais equipamentos (Assets) estão nele.
+    # Usamos "Asset" como string para evitar erros de importação circular.
+    assets: Mapped[List["Asset"]] = relationship(back_populates="location")
+    
+    # --- FIM DA ALTERAÇÃO ---

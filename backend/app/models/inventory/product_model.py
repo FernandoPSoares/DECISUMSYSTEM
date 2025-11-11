@@ -1,4 +1,4 @@
-# backend/app/models/inventory/product_model.py
+# File: backend/app/models/inventory/product_model.py
 
 from sqlalchemy import Column, String, Boolean, Numeric, ForeignKey, Text
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -7,6 +7,12 @@ import uuid
 from typing import List, Optional
 
 from ...core.database import Base
+
+# --- CORREÇÃO AQUI ---
+# A importação 'from app.models.maintenance.asset_spare_parts_model import asset_spare_parts_table'
+# foi REMOVIDA, pois 'asset_spare_parts_table' já não existe.
+# --- FIM DA CORREÇÃO ---
+
 
 class CategoriaProduto(Base):
     __tablename__ = 'categorias_produto'
@@ -35,10 +41,18 @@ class Produto(Base):
     # Relações
     udm = relationship("Udm")
     categoria_produto = relationship("CategoriaProduto", back_populates="produtos")
-    marca: Mapped[Optional["Marca"]] = relationship(back_populates="produtos") # <-- NOVA RELAÇÃO
+    marca: Mapped[Optional["Marca"]] = relationship(back_populates="produtos") 
     
     variantes: Mapped[List["VarianteProduto"]] = relationship(back_populates="produto")
     boms: Mapped[List["Bom"]] = relationship(back_populates="produto", foreign_keys="[Bom.produto_id]")
+
+    # --- CORREÇÃO AQUI ---
+    # O relacionamento foi atualizado para usar a nova classe 'AssetSparePart'.
+    # Isto substitui a necessidade do 'secondary=asset_spare_parts_table'.
+    assets_using_this_part: Mapped[List["AssetSparePart"]] = relationship(
+        back_populates="product"
+    )
+    # --- FIM DA CORREÇÃO ---
 
 class VarianteProduto(Base):
     __tablename__ = 'variantes_produto'

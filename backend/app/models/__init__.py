@@ -32,3 +32,21 @@ from .production.work_center_model import CentroTrabalho
 from .production.bom_model import Bom, BomComponente
 from .production.production_order_model import OrdemProducao
 
+# Módulo de Manutenção
+from .maintenance.maintenance_team_model import MaintenanceTeam
+from .maintenance.technician_model import Technician
+from .maintenance.manufacturer_model import Manufacturer
+from .maintenance.asset_model import Asset
+from .maintenance.asset_spare_parts_model import AssetSparePart
+from .maintenance.asset_meter_model import AssetMeter, AssetMeterReading
+from .maintenance.asset_failure_mode_model import (
+    MaintenanceFailureSymptom,
+    MaintenanceFailureMode,
+    MaintenanceFailureCause
+)
+from .maintenance.work_order_model import (
+    WorkOrder,
+    wo_failure_symptoms_association,
+    wo_failure_modes_association,
+    wo_failure_causes_association
+)
