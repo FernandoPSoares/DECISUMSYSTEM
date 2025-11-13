@@ -1,4 +1,4 @@
-# backend/app/core/crud_base.py
+# File: backend/app/core/crud_base.py
 
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from pydantic import BaseModel
@@ -15,6 +15,13 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.model = model
 
     def get(self, db: Session, id: Any) -> Optional[ModelType]:
+        """
+        Obtém um registo pelo seu ID.
+        Nota: Este método NÃO filtra por 'is_active', permitindo
+        obter itens inativos se o seu ID for conhecido.
+        A lógica de negócio para bloquear isto (se necessário)
+        deve estar no 'Service'.
+        """
         return db.query(self.model).filter(self.model.id == id).first()
 
     def get_multi(
@@ -23,16 +30,26 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         *,
         skip: int = 0,
         limit: int = 100,
-        is_active: Optional[bool] = None,
+        # --- ALTERAÇÃO SOFT DELETE ---
+        # O padrão agora é True. A API só retorna ativos por defeito.
+        # Para ver inativos, o frontend deve pedir explicitamente is_active=False.
+        # Para ver todos, o frontend deve pedir explicitamente is_active=None.
+        is_active: Optional[bool] = True,
+        # --- FIM DA ALTERAÇÃO ---
         search: Optional[str] = None,
         sort_by: Optional[str] = None,
         sort_order: str = "asc"
     ) -> List[ModelType]:
         query = db.query(self.model)
 
-        # Filtro de Atividade
-        if hasattr(self.model, "is_active") and is_active is not None:
-            query = query.filter(self.model.is_active == is_active)
+        # --- LÓGICA DE FILTRO DE ATIVIDADE (SOFT DELETE) ---
+        if hasattr(self.model, "is_active"):
+            if is_active is not None:
+                # Se is_active for True (padrão) ou False (pedido), filtra.
+                query = query.filter(self.model.is_active == is_active)
+            # Se is_active for None (pedido explicitamente), não filtra
+            # e retorna *todos* os itens (ativos e inativos).
+        # --- FIM DA LÓGICA ---
 
         # Lógica de Pesquisa (já era case-insensitive com ILIKE)
         if search:
@@ -41,7 +58,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             if search_filters:
                 query = query.filter(or_(*search_filters))
 
-        # --- 2. LÓGICA DE ORDENAÇÃO CORRIGIDA PARA SER CASE-INSENSITIVE ---
+        # --- LÓGICA DE ORDENAÇÃO CORRIGIDA PARA SER CASE-INSENSITIVE ---
         if sort_by:
             sort_column = None
             if '.' in sort_by:
@@ -97,10 +114,34 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db.refresh(db_obj)
         return db_obj
 
+    # --- ALTERAÇÃO SOFT DELETE ---
     def remove(self, db: Session, *, id: Any) -> Optional[ModelType]:
+        """
+        Elimina um registo (implementando soft delete).
+        
+        Se o modelo tiver o atributo 'is_active', este método
+        define 'is_active' como False (soft delete).
+        
+        Se o modelo NÃO tiver 'is_active', este método
+        executa um 'delete' permanente (hard delete).
+        """
         obj = db.query(self.model).get(id)
-        if obj:
+        
+        if not obj:
+            return None
+
+        if hasattr(self.model, "is_active"):
+            # --- SOFT DELETE ---
+            # Define is_active = False em vez de apagar
+            setattr(obj, 'is_active', False)
+            db.commit()
+            db.refresh(obj)
+        else:
+            # --- HARD DELETE (Comportamento antigo) ---
+            # Para modelos que não devem ter soft delete
+            # (ex: tabelas de log, tabelas de associação)
             db.delete(obj)
             db.commit()
+            
         return obj
-
+    # --- FIM DA ALTERAÇÃO ---

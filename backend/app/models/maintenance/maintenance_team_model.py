@@ -1,6 +1,11 @@
+# File: backend/app/models/maintenance/maintenance_team_model.py
 import uuid
-from sqlalchemy import Column, String, UUID
-from sqlalchemy.orm import relationship
+# --- CORREÇÃO: Importar o TIPO UUID do SQLAlchemy e o NOVO Boolean ---
+from sqlalchemy import Column, String, Boolean
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+# --- FIM DA CORREÇÃO ---
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+from typing import List, Optional
 from app.core.database import Base
 
 class MaintenanceTeam(Base):
@@ -10,33 +15,32 @@ class MaintenanceTeam(Base):
     """
     __tablename__ = "maintenance_teams"
 
-    # Chave primária UUID
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # --- CORREÇÃO: Sintaxe 'mapped_column' corrigida ---
+    # A anotação de tipo (Mapped[uuid.UUID]) usa o 'uuid' do Python.
+    # A função (mapped_column) usa o 'PG_UUID' do SQLAlchemy.
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, index=True, unique=True)
     
-    # Nome da equipe (ex: "Mecânica A", "Elétrica")
-    # Deve ser único e indexado para buscas rápidas.
-    name = Column(String(100), nullable=False, index=True, unique=True)
+    # --- NOVA COLUNA (Soft Delete) ---
+    # Adicionamos este campo para que o CRUDBase.remove() 
+    # possa fazer o soft delete (definindo isto como False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
+    # --- FIM DA NOVA COLUNA ---
 
-    # --- Relacionamentos (Definidos aqui, mas implementados nos outros modelos) ---
+    # --- Relacionamentos ---
 
-    # Relacionamento One-to-Many: Uma equipe para muitos técnicos
-    # O 'back_populates' aponta para o atributo 'team' no modelo 'Technician'
-    technicians = relationship(
+    technicians: Mapped[List["Technician"]] = relationship(
         "Technician", 
         back_populates="team",
-        cascade="all, delete-orphan" # Opcional: se deletar a equipe, deleta os técnicos (discutível)
+        cascade="all, delete-orphan"
     )
 
-    # Relacionamento One-to-Many: Uma equipe para muitas Ordens de Serviço
-    # O 'back_populates' aponta para 'assigned_team' no modelo 'WorkOrder'
-    assigned_work_orders = relationship(
+    assigned_work_orders: Mapped[List["WorkOrder"]] = relationship(
         "WorkOrder", 
-        back_populates="assigned_team"
+        back_populates="assigned_to_team"
     )
 
-    # Relacionamento One-to-Many: Uma equipe para muitos Planos de Preventiva
-    # O 'back_populates' aponta para 'assigned_team' no modelo 'PMPlan'
-    pm_plans = relationship(
+    pm_plans: Mapped[List["PMPlan"]] = relationship(
         "PMPlan", 
-        back_populates="assigned_team"
+        back_populates="assigned_to_team"
     )

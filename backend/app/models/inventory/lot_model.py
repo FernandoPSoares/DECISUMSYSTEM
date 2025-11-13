@@ -1,9 +1,11 @@
-# backend/app/models/inventory/lot_model.py
+# File: backend/app/models/inventory/lot_model.py
 
 from sqlalchemy import Column, String, DateTime, ForeignKey, func
-from sqlalchemy.orm import relationship
+# --- ALTERAÇÃO: Importações Mapped e List adicionadas ---
+from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
+from typing import List # Importação de List
 
 # Importa a Base partilhada a partir do nosso core
 from ...core.database import Base
@@ -29,3 +31,9 @@ class Lote(Base):
     
     # Relação bidirecional com a Variante de Produto
     variante_produto = relationship("VarianteProduto", back_populates="lotes")
+
+    # --- NOVA RELAÇÃO (Back-populates de work_order_parts_model.py) ---
+    wo_part_usages: Mapped[List["WorkOrderPartUsage"]] = relationship(
+        back_populates="lot"
+    )
+    # --- FIM DA NOVA RELAÇÃO ---

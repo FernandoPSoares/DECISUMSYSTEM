@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from typing import List, Optional
 from app.core.database import Base
+# Importa o modelo de Utilizador (corrigido para 'Usuario')
 from app.models.administration.user_model import Usuario
 
 # --- Tabelas de Associação Many-to-Many ---
@@ -100,13 +101,8 @@ class WorkOrder(Base):
     assigned_to_technician_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey('maintenance_technicians.id'), nullable=True)
     assigned_to_team_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey('maintenance_teams.id'), nullable=True)
 
-    # --- CORREÇÃO TEMPORÁRIA ---
-    # O modelo 'maintenance_pm_plans' (Domínio 4) ainda não foi criado.
-    # Vamos comentar esta FK e o relacionamento por agora.
-    
-    # pm_plan_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey('maintenance_pm_plans.id'), nullable=True)
-    
-    # --- FIM DA CORREÇÃO ---
+    # Ligação ao Plano de PM (agora descomentado)
+    pm_plan_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey('maintenance_pm_plans.id'), nullable=True)
     
     # --- Relacionamentos ---
     
@@ -121,12 +117,18 @@ class WorkOrder(Base):
     assigned_to_technician: Mapped[Optional["Technician"]] = relationship(back_populates="assigned_work_orders")
     assigned_to_team: Mapped[Optional["MaintenanceTeam"]] = relationship(back_populates="assigned_work_orders")
 
-    # --- CORREÇÃO TEMPORÁRIA ---
-    # Comentando o relacionamento que depende do 'pm_plan_id'
+    # Ligação aos apontamentos de horas (mão de obra)
+    labor_logs: Mapped[List["WorkOrderLaborLog"]] = relationship(
+        back_populates="work_order"
+    )
     
-    # pm_plan: Mapped[Optional["PMPlan"]] = relationship(back_populates="generated_work_orders")
+    # Ligação às peças usadas
+    parts_used: Mapped[List["WorkOrderPartUsage"]] = relationship(
+        back_populates="work_order"
+    )
     
-    # --- FIM DA CORREÇÃO ---
+    # Ligação ao Plano de PM (agora descomentado)
+    pm_plan: Mapped[Optional["PMPlan"]] = relationship(back_populates="generated_work_orders")
 
     # Relacionamentos Many-to-Many para Análise de Falha
     failure_symptoms: Mapped[List["MaintenanceFailureSymptom"]] = relationship(
@@ -141,3 +143,24 @@ class WorkOrder(Base):
         secondary=wo_failure_causes_association,
         back_populates="work_orders"
     )
+
+    # Ligação ao Checklist de Tarefas
+    tasks: Mapped[List["WorkOrderTask"]] = relationship(
+        back_populates="work_order",
+        order_by="WorkOrderTask.order_index",
+        cascade="all, delete-orphan"
+    )
+
+    # Ligação aos Logs de Atividade/Comentários
+    activity_logs: Mapped[List["WorkOrderLog"]] = relationship(
+        back_populates="work_order",
+        order_by="asc(WorkOrderLog.created_at)",
+        cascade="all, delete-orphan"
+    )
+
+    # --- NOVA RELAÇÃO (Back-populates de asset_meter_model.py) ---
+    # Leituras de medidores registadas durante esta OS
+    meter_readings: Mapped[List["AssetMeterReading"]] = relationship(
+        back_populates="work_order"
+    )
+    # --- FIM DA NOVA RELAÇÃO ---

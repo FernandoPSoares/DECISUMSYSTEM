@@ -71,3 +71,17 @@ class VarianteProduto(Base):
     boms: Mapped[List["Bom"]] = relationship(back_populates="variante_produto", foreign_keys="[Bom.variante_produto_id]")
     ordens_de_producao: Mapped[List["OrdemProducao"]] = relationship(back_populates="variante_produto")
     linhas_de_compra: Mapped[List["OrdemDeCompraLinha"]] = relationship(back_populates="variante_produto")
+
+    # --- NOVA RELAÇÃO (Back-populates de work_order_parts_model.py) ---
+    wo_part_usages: Mapped[List["WorkOrderPartUsage"]] = relationship(
+        back_populates="product_variant"
+    )
+    # --- FIM DA NOVA RELAÇÃO ---
+
+    # --- NOVA RELAÇÃO (Back-populates de pm_parts_list_model.py) ---
+    # Define em quais "Listas de Peças de PMs" esta variante é usada
+    pm_required_parts: Mapped[List["PMRequiredPart"]] = relationship(
+        back_populates="product_variant"
+    )
+    # --- FIM DA NOVA RELAÇÃO ---
+    

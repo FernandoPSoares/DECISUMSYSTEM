@@ -1,4 +1,4 @@
-# backend/app/models/__init__.py
+# File: backend/app/models/__init__.py
 
 # Importa a nossa Base partilhada a partir do core da aplicação
 from ..core.database import Base
@@ -13,7 +13,8 @@ from .administration.user_model import Usuario, PasswordResetToken
 
 # Módulo de Compras
 from .purchasing.supplier_model import Fornecedor
-from .purchasing.purchase_order_model import OrdemDeCompra
+# (Nota: Faltava OrdemDeCompra no seu ficheiro, mas estava no seu histórico - adicionei)
+from .purchasing.purchase_order_model import OrdemDeCompra, OrdemDeCompraLinha
 
 # Módulo de Inventário
 from .inventory.udm_model import CategoriaUdm, Udm
@@ -32,9 +33,13 @@ from .production.work_center_model import CentroTrabalho
 from .production.bom_model import Bom, BomComponente
 from .production.production_order_model import OrdemProducao
 
-# Módulo de Manutenção
+# --- Módulo de Manutenção (CMMS) - VERSÃO COMPLETA ---
+
+# Domínio 1: Pessoas
 from .maintenance.maintenance_team_model import MaintenanceTeam
 from .maintenance.technician_model import Technician
+
+# Domínio 2: Ativos
 from .maintenance.manufacturer_model import Manufacturer
 from .maintenance.asset_model import Asset
 from .maintenance.asset_spare_parts_model import AssetSparePart
@@ -44,9 +49,22 @@ from .maintenance.asset_failure_mode_model import (
     MaintenanceFailureMode,
     MaintenanceFailureCause
 )
+
+# Domínio 3: Ordens de Serviço (Work Orders)
 from .maintenance.work_order_model import (
     WorkOrder,
     wo_failure_symptoms_association,
     wo_failure_modes_association,
     wo_failure_causes_association
 )
+from .maintenance.work_order_labor_log_model import WorkOrderLaborLog
+from .maintenance.work_order_parts_model import WorkOrderPartUsage
+from .maintenance.work_order_task_model import WorkOrderTask
+from .maintenance.work_order_log_model import WorkOrderLog
+
+# Domínio 4: Manutenção Preventiva (PMs)
+from .maintenance.pm_plan_model import PMPlan
+from .maintenance.pm_task_list_model import PMTask
+from .maintenance.pm_parts_list_model import PMRequiredPart
+
+# --- FIM DAS IMPORTAÇÕES ---

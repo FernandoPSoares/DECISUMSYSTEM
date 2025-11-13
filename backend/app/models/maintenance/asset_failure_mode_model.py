@@ -2,14 +2,12 @@
 import uuid
 from sqlalchemy import Column, String, Boolean
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+# --- ALTERAÇÃO: Importar 'relationship' ---
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List
 from app.core.database import Base
 
 # --- Tabelas de Lookup para Análise de Causa Raiz (RCA) ---
-# Estas tabelas armazenam as *opções* que um técnico pode selecionar
-# ao fechar uma Ordem de Serviço. Os relacionamentos (Many-to-Many)
-# com a Ordem de Serviço serão definidos quando criarmos o modelo WorkOrder.
 
 class MaintenanceFailureSymptom(Base):
     """
@@ -23,12 +21,13 @@ class MaintenanceFailureSymptom(Base):
     description: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     
-    # O relacionamento M-M com WorkOrder será adicionado depois,
-    # usando a tabela 'maintenance_wo_failure_symptoms'.
-    # work_orders: Mapped[List["WorkOrder"]] = relationship(
-    #     secondary="maintenance_wo_failure_symptoms",
-    #     back_populates="failure_symptoms"
-    # )
+    # --- ALTERAÇÃO: Relacionamento descomentado ---
+    # O 'back_populates' corresponde ao 'failure_symptoms' em WorkOrder
+    work_orders: Mapped[List["WorkOrder"]] = relationship(
+        secondary="maintenance_wo_symptoms",
+        back_populates="failure_symptoms"
+    )
+    # --- FIM DA ALTERAÇÃO ---
 
 class MaintenanceFailureMode(Base):
     """
@@ -42,12 +41,13 @@ class MaintenanceFailureMode(Base):
     description: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     
-    # O relacionamento M-M com WorkOrder será adicionado depois,
-    # usando a tabela 'maintenance_wo_failure_modes'.
-    # work_orders: Mapped[List["WorkOrder"]] = relationship(
-    #     secondary="maintenance_wo_failure_modes",
-    #     back_populates="failure_modes"
-    # )
+    # --- ALTERAÇÃO: Relacionamento descomentado ---
+    # O 'back_populates' corresponde ao 'failure_modes' em WorkOrder
+    work_orders: Mapped[List["WorkOrder"]] = relationship(
+        secondary="maintenance_wo_failure_modes",
+        back_populates="failure_modes"
+    )
+    # --- FIM DA ALTERAÇÃO ---
 
 class MaintenanceFailureCause(Base):
     """
@@ -61,9 +61,10 @@ class MaintenanceFailureCause(Base):
     description: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    # O relacionamento M-M com WorkOrder será adicionado depois,
-    # usando a tabela 'maintenance_wo_failure_causes'.
-    # work_orders: Mapped[List["WorkOrder"]] = relationship(
-    #     secondary="maintenance_wo_failure_causes",
-    #     back_populates="failure_causes"
-    # )
+    # --- ALTERAÇÃO: Relacionamento descomentado ---
+    # O 'back_populates' corresponde ao 'failure_causes' em WorkOrder
+    work_orders: Mapped[List["WorkOrder"]] = relationship(
+        secondary="maintenance_wo_failure_causes",
+        back_populates="failure_causes"
+    )
+    # --- FIM DA ALTERAÇÃO ---

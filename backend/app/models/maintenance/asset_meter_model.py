@@ -36,6 +36,13 @@ class AssetMeter(Base):
         order_by="desc(AssetMeterReading.reading_date)" # Útil: ter sempre a última leitura primeiro
     )
 
+    # --- NOVA RELAÇÃO (Back-populates de pm_plan_model.py) ---
+    # Planos de Preventiva que são acionados por este medidor
+    pm_plans_triggered_by: Mapped[List["PMPlan"]] = relationship(
+        back_populates="trigger_meter"
+    )
+    # --- FIM DA NOVA RELAÇÃO ---
+
 class AssetMeterReading(Base):
     """
     Armazena uma leitura individual de um medidor num determinado momento.

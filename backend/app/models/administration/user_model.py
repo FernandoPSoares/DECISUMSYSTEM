@@ -1,9 +1,10 @@
-# backend/app/models/administration/user_model.py
+# File: backend/app/models/administration/user_model.py
 
 from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean, func
-from sqlalchemy.orm import relationship
 # --- 1. IMPORTAÇÕES ADICIONAIS ---
-# Importamos o tipo UUID do PostgreSQL e a biblioteca uuid do Python.
+# Importamos Mapped e List/Optional para os novos relacionamentos
+from sqlalchemy.orm import relationship, Mapped
+from typing import List, Optional
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
@@ -28,6 +29,33 @@ class Usuario(Base):
     
     role_id = Column(String(50), ForeignKey('roles.id'), nullable=False)
     role = relationship("Role", back_populates="users")
+
+    # --- 4. NOVOS RELACIONAMENTOS (Módulo de Manutenção) ---
+    
+    # Ligação 1-para-1 com o registo de Técnico (se este utilizador for um técnico)
+    # (Back-populates de 'technician_model.py')
+    technician_record: Mapped[Optional["Technician"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    
+    # Ordens de Serviço criadas por este utilizador
+    # (Back-populates de 'work_order_model.py')
+    created_work_orders: Mapped[List["WorkOrder"]] = relationship(
+        back_populates="created_by_user"
+    )
+    
+    # Tarefas (checklists) de OS completadas por este utilizador
+    # (Back-populates de 'work_order_task_model.py')
+    completed_wo_tasks: Mapped[List["WorkOrderTask"]] = relationship(
+        back_populates="completed_by_user"
+    )
+
+    # --- NOVA RELAÇÃO (Back-populates de work_order_log_model.py) ---
+    # Logs de atividade de OS gerados por este utilizador
+    wo_activity_logs: Mapped[List["WorkOrderLog"]] = relationship(
+        back_populates="user"
+    )
+    # --- FIM DA NOVA RELAÇÃO ---
 
 class PasswordResetToken(Base):
     """Armazena os tokens de uso único para a recuperação de senhas."""

@@ -1,4 +1,4 @@
-# backend/app/modules/api_router.py
+# File: backend/app/modules/api_router.py
 
 from fastapi import APIRouter
 
@@ -23,6 +23,10 @@ from .inventory.brands.brands_router import router as brands_router
 from .inventory.udms.udms_router import router_categorias_udm, router_udm
 from .inventory.product_categories.product_categories_router import router as product_categories_router
 from .inventory.products.products_router import router as products_router
+
+# --- NOVO: Módulo de Manutenção ---
+from .maintenance.router import maintenance_router
+# --- FIM DA ALTERAÇÃO ---
 
 
 # Cria o router de agregação principal
@@ -53,3 +57,7 @@ api_router.include_router(router_udm)
 api_router.include_router(product_categories_router)
 api_router.include_router(products_router)
 
+# --- NOVO: Módulo de Manutenção ---
+# Adiciona todos os endpoints de manutenção sob o prefixo /maintenance
+api_router.include_router(maintenance_router, prefix="/maintenance")
+# --- FIM DA ALTERAÇÃO ---

@@ -3,7 +3,7 @@ import uuid
 import enum
 from sqlalchemy import (
     Column, String, Boolean, ForeignKey, DateTime, func, Text,
-    Integer, Enum  # <--- CORREÇÃO AQUI: 'Enum' foi adicionado
+    Integer, Enum 
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -30,7 +30,6 @@ class Asset(Base):
     serial_number: Mapped[Optional[str]] = mapped_column(String(255), unique=True, index=True)
     internal_tag: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
     
-    # Esta linha agora funciona porque 'Enum' foi importado
     status: Mapped[AssetStatus] = mapped_column(Enum(AssetStatus), nullable=False, default=AssetStatus.OPERATIONAL)
     
     is_critical: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -81,6 +80,14 @@ class Asset(Base):
 
     # Ordens de Serviço ligadas a este ativo
     work_orders: Mapped[List["WorkOrder"]] = relationship(back_populates="asset")
+    
+    # --- NOVA RELAÇÃO (Back-populates de pm_plan_model.py) ---
+    # Planos de Manutenção Preventiva associados a este ativo
+    pm_plans: Mapped[List["PMPlan"]] = relationship(
+        back_populates="asset",
+        cascade="all, delete-orphan"
+    )
+    # --- FIM DA NOVA RELAÇÃO ---
 
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

@@ -1,7 +1,11 @@
 # File: backend/app/models/maintenance/manufacturer_model.py
 import uuid
-from sqlalchemy import Column, String, UUID
-from sqlalchemy.orm import relationship
+# --- ATUALIZAÇÃO DE IMPORTAÇÕES ---
+from sqlalchemy import Column, String, Boolean
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+from typing import List, Optional
+# --- FIM DA ATUALIZAÇÃO ---
 from app.core.database import Base
 
 class Manufacturer(Base):
@@ -11,24 +15,29 @@ class Manufacturer(Base):
     """
     __tablename__ = "maintenance_manufacturers"
 
-    # Chave primária UUID
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # --- SINTAXE MODERNIZADA ---
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     
-    # Nome do fabricante (ex: "Siemens", "WEG")
-    # Deve ser único e indexado para buscas rápidas.
-    name = Column(String(100), nullable=False, unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
     
     # Informações de contacto opcionais
-    contact_person = Column(String(100), nullable=True)
-    contact_phone = Column(String(50), nullable=True)
-    contact_email = Column(String(100), nullable=True)
+    contact_person: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    contact_phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    contact_email: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    
+    # --- NOVO CAMPO (PACTO DO SOFT DELETE) ---
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, 
+        default=True, 
+        nullable=False, 
+        index=True, 
+        comment="Indica se o fabricante está ativo (True) ou 'apagado' (False)."
+    )
+    # --- FIM DO NOVO CAMPO ---
 
-    # --- Relacionamentos ---
-
-    # Relacionamento One-to-Many: Um fabricante para muitos ativos
-    # O 'back_populates' aponta para o atributo 'manufacturer' no modelo 'Asset'
-    # que criaremos a seguir.
-    assets = relationship(
+    # --- Relacionamentos (Modernizados) ---
+    assets: Mapped[List["Asset"]] = relationship(
         "Asset", 
         back_populates="manufacturer"
     )
+    # --- FIM DA MODERNIZAÇÃO ---
