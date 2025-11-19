@@ -1,0 +1,25 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.env
+
+# --- Node / React ---
+node_modules/
+build/
+dist/
+.npm
+*.log
+
+# --- IDEs e Sistema ---
+.idea/
+.vscode/
+.gemini/
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Decisum Specific ---
+# Adicione aqui pastas de uploads ou temporários se tiver
